@@ -1,18 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <termios.h>            //termios, TCSANOW, ECHO, ICANON
-#include <unistd.h>     		//STDIN_FILENO
+#include <termios.h>
+#include <unistd.h>
+#include <signal.h>
 
 #include "dlsh.h"
-
-
-#define QUIT_CHAR	'q'
 
 
 
 void dlshTestPrint(const char* str);
 char dlshTestGetChar(void);
+void dlshTestExit(int s);
+
+
+
+void dlshTestExit(int s)
+{
+	dlshExit();
+}
 
 
 void dlshTestPrint(const char* str)
@@ -27,11 +32,6 @@ char dlshTestGetChar(void)
 	fflush(stdin);
 	inputChar = getchar();
 
-	if (QUIT_CHAR == inputChar)
-	{
-		dlshExit();
-	}
-
 	return inputChar;
 }
 
@@ -39,8 +39,10 @@ char dlshTestGetChar(void)
 int main (void)
 {
     static struct termios oldt, newt;
+    struct sigaction sigIntHandler;
 
-	printf("\ndlsh test start\n\n");
+	printf("\nDLSH test start\n");
+	printf("ctrl+c to exit\n");
 
 	/*tcgetattr gets the parameters of the current terminal
     STDIN_FILENO will tell tcgetattr that it should write the settings
@@ -56,6 +58,13 @@ int main (void)
     /*Those new settings will be set to STDIN
     TCSANOW tells tcsetattr to change attributes immediately. */
     tcsetattr( STDIN_FILENO, TCSANOW, &newt);
+
+
+    sigIntHandler.sa_handler = dlshTestExit;
+	sigemptyset(&sigIntHandler.sa_mask);
+	sigIntHandler.sa_flags = 0;
+
+	sigaction(SIGINT, &sigIntHandler, NULL);
 
 
     /**
