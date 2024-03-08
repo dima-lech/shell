@@ -86,7 +86,7 @@ static void dlshDoCommand(void)
 }
 
 
-static void dlshHelpCommand(int argc, char * argv[])
+static void dlshHelpCommand(__attribute__((unused)) int argc, __attribute__((unused)) char * argv[])
 {
 	int i;
 
