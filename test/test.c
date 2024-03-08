@@ -16,15 +16,30 @@ void testCommand2(int argc, char * argv[]);
 
 
 
+
 void testCommand1(int argc, char * argv[])
 {
+	int i;
+
 	printf(">>> this is %s()\n", __FUNCTION__);
+
+	for (i = 1; i < argc; i++)
+	{
+		printf("\targ%d\t%s\n", i, argv[i]);
+	}
 }
 
 
 void testCommand2(int argc, char * argv[])
 {
+	int i;
+
 	printf(">>> this is %s()\n", __FUNCTION__);
+
+	for (i = 1; i < argc; i++)
+	{
+		printf("\targ%d\t%s\n", i, argv[i]);
+	}
 }
 
 
