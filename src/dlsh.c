@@ -15,6 +15,8 @@
 #define MAX_ARGV_COUNT			32
 #define DEFAULT_PROMPT			"[DLSH]> "
 #define CHAR_NEWLINE			'\n'
+#define CHAR_NEWLINE1			CHAR_NEWLINE
+#define CHAR_NEWLINE2			'\r'
 #define CHAR_ESCAPE				'\x1b'
 #define CHAR_SPACE				' '
 #define CHAR_NULL				'\0'
@@ -137,8 +139,14 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 	{
 		inputCharStr[0] = dlshGetCharFunc();
 
-		if (CHAR_NEWLINE == inputCharStr[0])
+		if ((CHAR_NEWLINE1 == inputCharStr[0]) || (CHAR_NEWLINE2 == inputCharStr[0]))
 		{
+			if (printInput)
+			{
+				inputCharStr[0] = CHAR_NEWLINE;
+				inputCharStr[1] = CHAR_NULL;
+			}
+
 			if (argvLen > 0)
 			{
 				argvLocal[argc][argvLen++] = CHAR_NULL;
