@@ -2,19 +2,26 @@
 
 
 static dlshPrintFuncType dlshPrintFunc = 0;
-static dlshExitFuncType dlshExitFunc = 0;
+static int exitFlag = 0;
 
 
-int dlshStart(dlshPrintFuncType dlshPrintFuncParam, dlshExitFuncType dlshExitFuncParam)
+int dlshStart(dlshPrintFuncType dlshPrintFuncParam)
 {
-	if ((0 == dlshPrintFuncParam) || (0 == dlshPrintFuncParam))
+	if (0 == dlshPrintFuncParam)
 	{
 		return -1;
 	}
 
 	dlshPrintFunc = dlshPrintFuncParam;
-	dlshExitFunc = dlshExitFuncParam;
+
+	dlshPrintFunc("dlshStart()\n");
 
 	return 0;
+}
+
+
+void dlshExit(void)
+{
+	exitFlag = 1;
 }
 

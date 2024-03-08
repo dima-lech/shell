@@ -2,11 +2,14 @@
 #define		__DLSH_H__
 
 
+/**
+ * Prints a single string
+ **/
 typedef void (*dlshPrintFuncType)(const char *);
-typedef void (*dlshExitFuncType)(void);
 
 
-int dlshStart(dlshPrintFuncType dlshPrintFuncParam, dlshExitFuncType dlshExitFuncParam);
+int dlshStart(dlshPrintFuncType dlshPrintFuncParam);
+void dlshExit(void);
 
 
 
