@@ -73,6 +73,10 @@ static void dlshDoCommand(void)
 			return;
 		}
 	}
+
+	dlshPrintFunc("'");
+	dlshPrintFunc(argv[0]);
+	dlshPrintFunc("' command not found!\n");
 }
 
 
@@ -80,8 +84,14 @@ static void dlshHelpCommand(int argc, char * argv[])
 {
 	int i;
 
+	if (commandsNum <= 1)
+	{
+		dlshPrintFunc("No commands were registered!\n");
+		return;
+	}
+
 	dlshPrintFunc("Available commands:\n");
-	for (i = 0; i < commandsNum; i++)
+	for (i = 0; i < (commandsNum - 1); i++)
 	{
 		dlshPrintFunc("\t");
 		dlshPrintFunc(commandsList[i].string);

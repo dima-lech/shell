@@ -11,6 +11,21 @@
 void dlshTestPrint(const char* str);
 char dlshTestGetChar(void);
 void dlshTestExit(int s);
+void testCommand1(int argc, char * argv[]);
+void testCommand2(int argc, char * argv[]);
+
+
+
+void testCommand1(int argc, char * argv[])
+{
+	printf(">>> this is %s()\n", __FUNCTION__);
+}
+
+
+void testCommand2(int argc, char * argv[])
+{
+	printf(">>> this is %s()\n", __FUNCTION__);
+}
 
 
 
@@ -65,6 +80,13 @@ int main (void)
 	sigIntHandler.sa_flags = 0;
 
 	sigaction(SIGINT, &sigIntHandler, NULL);
+
+
+	/**
+	 * Register commands
+	 **/
+	dlshRegisterCommand("test1", testCommand1);
+	dlshRegisterCommand("test2", testCommand2);
 
 
     /**
