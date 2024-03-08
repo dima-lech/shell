@@ -12,6 +12,11 @@ typedef void (*dlshPrintFuncType)(const char *);
  **/
 typedef char (*dlshGetCharFuncType)(void);
 
+/**
+ * Command handler
+ **/
+typedef char (*dlshCommandFuncType)(int argc, char * argv[]);
+
 
 int dlshStart(
 				dlshPrintFuncType printFuncParam,
@@ -19,7 +24,7 @@ int dlshStart(
 				int printInput
 			);
 void dlshExit(void);
-
+int dlshRegisterCommand(char * string, dlshCommandFuncType function);
 
 
 #endif	/* __DLSH_H__ */
