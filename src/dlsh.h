@@ -15,7 +15,7 @@ typedef char (*dlshGetCharFuncType)(void);
 /**
  * Command handler
  **/
-typedef char (*dlshCommandFuncType)(int argc, char * argv[]);
+typedef void (*dlshCommandFuncType)(int argc, char * argv[]);
 
 
 int dlshStart(

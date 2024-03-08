@@ -36,6 +36,14 @@ static char argv[MAX_ARGV_COUNT][MAX_ARGV_LEN];
 static int argc = 0;
 
 
+
+static void dlshHelpCommand(int argc, char * argv[]);
+static void dlshDoCommand(void);
+void printArgDebug(void);
+static int strcmp(const char * str1, const char * str2);
+
+
+
 #ifdef	DLSH_DEBUG
 void printArgDebug(void)
 {
@@ -53,8 +61,33 @@ void printArgDebug(void)
 
 static void dlshDoCommand(void)
 {
+	int i;
+
 	DO_DEBUG(printArgDebug());
 
+	for (i = 0; i < commandsNum; i++)
+	{
+		if (strcmp(argv[0], commandsList[i].string))
+		{
+			commandsList[i].function(argc, (char **)argv);
+			return;
+		}
+	}
+}
+
+
+static void dlshHelpCommand(int argc, char * argv[])
+{
+	int i;
+
+	dlshPrintFunc("Available commands:\n");
+	for (i = 0; i < commandsNum; i++)
+	{
+		dlshPrintFunc("\t");
+		dlshPrintFunc(commandsList[i].string);
+		dlshPrintFunc("\n");
+	}
+	dlshPrintFunc("\n");
 }
 
 
@@ -71,9 +104,13 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 	dlshPrintFunc = printFuncParam;
 	dlshGetCharFunc = getCharFuncParam;
 
+	/* Register built-in 'help' command */
+	dlshRegisterCommand("help", dlshHelpCommand);
+
 	dlshPrintFunc("\n=== DLSH START ");
 	DO_DEBUG(dlshPrintFunc("[DEBUG MODE ON] "));
-	dlshPrintFunc("===\n\n");
+	dlshPrintFunc("===\n");
+	dlshPrintFunc("Type 'help' for list of available commands.\n\n");
 
 	dlshPrintFunc(DEFAULT_PROMPT);
 
@@ -167,5 +204,27 @@ int dlshRegisterCommand(char * string, dlshCommandFuncType function)
 
 	return 0;
 }
+
+
+
+static int strcmp(const char * str1, const char * str2)
+{
+	int i;
+
+	for (i = 0; i < MAX_STRING_LEN; i++)
+	{
+		if (str1[i] != str2[i])
+		{
+			return 0;
+		}
+		else if (str1[i] == CHAR_NULL)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 
 
