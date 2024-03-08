@@ -7,8 +7,17 @@
  **/
 typedef void (*dlshPrintFuncType)(const char *);
 
+/**
+ * Returns a single character input
+ **/
+typedef char (*dlshGetCharFuncType)(void);
 
-int dlshStart(dlshPrintFuncType dlshPrintFuncParam);
+
+int dlshStart(
+				dlshPrintFuncType printFuncParam,
+				dlshGetCharFuncType getCharFuncParam,
+				int printInput
+			);
 void dlshExit(void);
 
 
