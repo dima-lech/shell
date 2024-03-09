@@ -84,6 +84,11 @@ static void dlshDoCommand(void)
 		argc++;
 	}
 
+	if (argc == 0)
+	{
+		return;
+	}
+
 	/* Populate argv pointers */
 	for (i = 0; i < argc; i++)
 	{
