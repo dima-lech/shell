@@ -8,6 +8,7 @@
 #endif
 
 
+#define BUILT_IN_COMMANDS_NUM	2
 #define MAX_STRING_LEN			1024
 #define MAX_COMMAND_STRING_LEN	32
 #define MAX_COMMANDS			256
@@ -41,6 +42,7 @@ static int argc = 0;
 
 
 static void dlshHelpCommand(int argc, char * argv[]);
+static void dlshExitCommand(int argc, char * argv[]);
 static void dlshDoCommand(void);
 void printArgDebug(void);
 static int strcmp(const char * str1, const char * str2);
@@ -92,20 +94,26 @@ static void dlshHelpCommand(__attribute__((unused)) int argc, __attribute__((unu
 {
 	int i;
 
-	if (commandsNum <= 1)
+	if (commandsNum <= BUILT_IN_COMMANDS_NUM)
 	{
 		dlshPrintFunc("No commands were registered!\n");
 		return;
 	}
 
 	dlshPrintFunc("Available commands:\n");
-	for (i = 0; i < (commandsNum - 1); i++)
+	for (i = 0; i < (commandsNum - BUILT_IN_COMMANDS_NUM); i++)
 	{
 		dlshPrintFunc("\t");
 		dlshPrintFunc(commandsList[i].string);
 		dlshPrintFunc("\n");
 	}
 	dlshPrintFunc("\n");
+}
+
+static void dlshExitCommand(__attribute__((unused)) int argc, __attribute__((unused)) char * argv[])
+{
+	dlshPrintFunc("\nExiting shell...\t=^.^=\n\n");
+	exitFlag = 1;
 }
 
 
@@ -124,11 +132,14 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 
 	/* Register built-in 'help' command */
 	dlshRegisterCommand("help", dlshHelpCommand);
+	/* Register built-in 'exit' command */
+	dlshRegisterCommand("exit", dlshExitCommand);
 
 	dlshPrintFunc("\n=== DLSH START ");
 	DO_DEBUG(dlshPrintFunc("[DEBUG MODE ON] "));
 	dlshPrintFunc("===\n");
-	dlshPrintFunc("Type 'help' for list of available commands.\n\n");
+	dlshPrintFunc("Type 'help' for list of available commands.\n");
+	dlshPrintFunc("Type 'exit' to close shell.\n\n");
 
 	dlshPrintFunc(DEFAULT_PROMPT);
 
@@ -160,7 +171,10 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 				dlshDoCommand();
 			}
 
-			dlshPrintFunc(DEFAULT_PROMPT);
+			if (exitFlag != 1)
+			{
+				dlshPrintFunc(DEFAULT_PROMPT);
+			}
 			argc = 0;
 			argvLen = 0;
 		}
@@ -201,12 +215,12 @@ void dlshExit(void)
 {
 	char str[1] = { CHAR_NEWLINE };
 
-	exitFlag = 1;
-
 	if (0 != dlshPrintFunc)
 	{
 		dlshPrintFunc(str);
 	}
+
+	dlshExitCommand(0, 0);
 }
 
 
