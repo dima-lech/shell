@@ -119,7 +119,7 @@ static void dlshExitCommand(__attribute__((unused)) int argc, __attribute__((unu
 
 int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncParam, int printInput)
 {
-	char inputCharStr[1] = "";
+	char inputCharStr[2] = " ";
 	int argvLen = 0;
 
 	if ((0 == printFuncParam) || (0 == getCharFuncParam))
@@ -154,8 +154,8 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 		{
 			if (printInput)
 			{
-				inputCharStr[0] = CHAR_NEWLINE;
-				inputCharStr[1] = CHAR_NULL;
+				inputCharStr[0] = CHAR_NULL;
+				dlshPrintFunc("\n");
 			}
 
 			if (argvLen > 0)
@@ -180,7 +180,7 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 		}
 		else if (CHAR_ESCAPE == inputCharStr[0])
 		{
-			dlshPrintFunc("\r\n");
+			dlshPrintFunc("\n");
 			dlshPrintFunc(DEFAULT_PROMPT);
 			argc = 0;
 			argvLen = 0;
