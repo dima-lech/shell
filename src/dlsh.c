@@ -209,6 +209,11 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 				argvLen--;
 				dlshPrintFunc(STR_DELETE);
 			}
+			if (!printInput)
+			{
+				dlshPrintFunc(STR_DELETE);
+				dlshPrintFunc(STR_DELETE);
+			}
 			inputCharStr[0] = CHAR_NULL;
 		}
 		else
