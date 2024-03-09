@@ -39,53 +39,69 @@ static int commandsNum = 0;
 static DLSH_COMMAND_TYPE commandsList[MAX_COMMANDS];
 static char argvLocal[MAX_ARGV_COUNT][MAX_ARGV_LEN];
 static char * argvGlobal[MAX_ARGV_COUNT];
-static int argc = 0;
-
+static char commandLine[MAX_STRING_LEN];
 
 
 static void dlshHelpCommand(int argc, char * argv[]);
 static void dlshExitCommand(int argc, char * argv[]);
 static void dlshDoCommand(void);
-void printArgDebug(void);
 static int strcmp(const char * str1, const char * str2);
 
 
 
-#ifdef	DLSH_DEBUG
-void printArgDebug(void)
-{
-	int i;
-
-	dlshPrintFunc("Entered command:\n");
-	for (i = 0; i < argc; i++)
-	{
-		dlshPrintFunc("\t");
-		dlshPrintFunc(argvLocal[i]);
-		dlshPrintFunc("\n");
-	}
-}
-#endif
-
 static void dlshDoCommand(void)
 {
 	int i;
+	int argc = 0;
+	int argvLen = 0;
 
-	DO_DEBUG(printArgDebug());
+	DO_DEBUG(dlshPrintFunc("Command line string: \""));
+	DO_DEBUG(dlshPrintFunc(commandLine));
+	DO_DEBUG(dlshPrintFunc("\"\n"));
 
+	/* Parse command line */
+	for (i = 0; (i < MAX_STRING_LEN) && (commandLine[i] != CHAR_NULL); i++)
+	{
+		if (commandLine[i] == CHAR_SPACE)
+		{
+			if (argvLen > 0)
+			{
+				argvLocal[argc][argvLen] = CHAR_NULL;
+				argc++;
+				argvLen = 0;
+			}
+		}
+		else
+		{
+			argvLocal[argc][argvLen++] = commandLine[i];
+		}
+	}
+
+	/* Count last argument */
+	if (argvLen > 0)
+	{
+		argvLocal[argc][argvLen] = CHAR_NULL;
+		argc++;
+	}
+
+	/* Populate argv pointers */
 	for (i = 0; i < argc; i++)
 	{
 		argvGlobal[i] = argvLocal[i];
 	}
 
+	/* Search for command */
 	for (i = 0; i < commandsNum; i++)
 	{
 		if (strcmp(argvLocal[0], commandsList[i].string))
 		{
+			/* Perform command */
 			commandsList[i].function(argc, argvGlobal);
 			return;
 		}
 	}
 
+	/* Command not found */
 	dlshPrintFunc("'");
 	dlshPrintFunc(argvLocal[0]);
 	dlshPrintFunc("' command not found!\n");
@@ -122,7 +138,7 @@ static void dlshExitCommand(__attribute__((unused)) int argc, __attribute__((unu
 int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncParam, int printInput)
 {
 	char inputCharStr[2] = " ";
-	int argvLen = 0;
+	int commandLineLen = 0;
 
 	if ((0 == printFuncParam) || (0 == getCharFuncParam))
 	{
@@ -160,15 +176,10 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 				dlshPrintFunc("\n");
 			}
 
-			if (argvLen > 0)
-			{
-				argvLocal[argc][argvLen++] = CHAR_NULL;
-				/* TODO: error handling */
-				argc++;
-				argvLen = 0;
-			}
+			/* Terminate command line string */
+			commandLine[commandLineLen] = CHAR_NULL;
 
-			if (argc > 0)
+			if (commandLineLen > 0)
 			{
 				dlshDoCommand();
 			}
@@ -177,36 +188,24 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 			{
 				dlshPrintFunc(DEFAULT_PROMPT);
 			}
-			argc = 0;
-			argvLen = 0;
+
+			commandLineLen = 0;
 		}
 		else if (CHAR_ESCAPE == inputCharStr[0])
 		{
 			dlshPrintFunc("\n");
 			dlshPrintFunc(DEFAULT_PROMPT);
-			argc = 0;
-			argvLen = 0;
+			commandLineLen = 0;
 		}
-		else if (CHAR_SPACE == inputCharStr[0])
+		else if ((inputCharStr[0] >= 32) && (inputCharStr[0] <= 126))
 		{
-			argvLocal[argc][argvLen] = CHAR_NULL;
-
-			if (argvLen > 0)
-			{
-				/* TODO: error handling */
-				argc++;
-				argvLen = 0;
-			}
-		}
-		else if ((inputCharStr[0] >= 33) && (inputCharStr[0] <= 126))
-		{
-			argvLocal[argc][argvLen++] = inputCharStr[0];
+			commandLine[commandLineLen++] = inputCharStr[0];
 		}
 		else if (CHAR_BACKSPACE == inputCharStr[0])
 		{
-			if (argvLen > 0)
+			if (commandLineLen > 0)
 			{
-				argvLen--;
+				commandLineLen--;
 				dlshPrintFunc(STR_DELETE);
 			}
 			if (!printInput)
