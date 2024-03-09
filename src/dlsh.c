@@ -196,9 +196,13 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 				argvLen = 0;
 			}
 		}
-		else
+		else if ((inputCharStr[0] >= 33) && (inputCharStr[0] <= 126))
 		{
 			argvLocal[argc][argvLen++] = inputCharStr[0];
+		}
+		else
+		{
+			inputCharStr[0] = CHAR_NULL;
 		}
 
 		if (printInput)
