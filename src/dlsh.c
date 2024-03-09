@@ -21,6 +21,8 @@
 #define CHAR_ESCAPE				'\x1b'
 #define CHAR_SPACE				' '
 #define CHAR_NULL				'\0'
+#define CHAR_BACKSPACE			0x7F
+#define STR_DELETE				"\033[D \033[D"
 
 typedef struct
 {
@@ -199,6 +201,15 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 		else if ((inputCharStr[0] >= 33) && (inputCharStr[0] <= 126))
 		{
 			argvLocal[argc][argvLen++] = inputCharStr[0];
+		}
+		else if (CHAR_BACKSPACE == inputCharStr[0])
+		{
+			if (argvLen > 0)
+			{
+				argvLen--;
+				dlshPrintFunc(STR_DELETE);
+			}
+			inputCharStr[0] = CHAR_NULL;
 		}
 		else
 		{
