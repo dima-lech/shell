@@ -57,7 +57,7 @@ static void dlshDoCommand(void)
 
 	DO_DEBUG(dlshPrintFunc("Command line string: \""));
 	DO_DEBUG(dlshPrintFunc(commandLine));
-	DO_DEBUG(dlshPrintFunc("\"\n"));
+	DO_DEBUG(dlshPrintFunc("\"\r\n"));
 
 	/* Parse command line */
 	for (i = 0; (i < MAX_STRING_LEN) && (commandLine[i] != CHAR_NULL); i++)
@@ -109,7 +109,7 @@ static void dlshDoCommand(void)
 	/* Command not found */
 	dlshPrintFunc("'");
 	dlshPrintFunc(argvLocal[0]);
-	dlshPrintFunc("' command not found!\n");
+	dlshPrintFunc("' command not found!\r\n");
 }
 
 
@@ -119,23 +119,23 @@ static void dlshHelpCommand(__attribute__((unused)) int argc, __attribute__((unu
 
 	if (commandsNum <= BUILT_IN_COMMANDS_NUM)
 	{
-		dlshPrintFunc("No commands were registered!\n");
+		dlshPrintFunc("No commands were registered!\r\n");
 		return;
 	}
 
-	dlshPrintFunc("Available commands:\n");
+	dlshPrintFunc("Available commands:\r\n");
 	for (i = 0; i < (commandsNum - BUILT_IN_COMMANDS_NUM); i++)
 	{
 		dlshPrintFunc("\t");
 		dlshPrintFunc(commandsList[i].string);
-		dlshPrintFunc("\n");
+		dlshPrintFunc("\r\n");
 	}
-	dlshPrintFunc("\n");
+	dlshPrintFunc("\r\n");
 }
 
 static void dlshExitCommand(__attribute__((unused)) int argc, __attribute__((unused)) char * argv[])
 {
-	dlshPrintFunc("\nExiting shell...\t=^.^=\n\n");
+	dlshPrintFunc("\r\nExiting shell...\t=^.^=\r\n\n");
 	exitFlag = 1;
 }
 
@@ -158,11 +158,11 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 	/* Register built-in 'exit' command */
 	dlshRegisterCommand("exit", dlshExitCommand);
 
-	dlshPrintFunc("\n=== DLSH START ");
+	dlshPrintFunc("\r\n=== DLSH START ");
 	DO_DEBUG(dlshPrintFunc("[DEBUG MODE ON] "));
-	dlshPrintFunc("===\n");
-	dlshPrintFunc("Type 'help' for list of available commands.\n");
-	dlshPrintFunc("Type 'exit' to close shell.\n\n");
+	dlshPrintFunc("===\r\n");
+	dlshPrintFunc("Type 'help' for list of available commands.\r\n");
+	dlshPrintFunc("Type 'exit' to close shell.\r\n\n");
 
 	dlshPrintFunc(DEFAULT_PROMPT);
 
@@ -178,7 +178,7 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 			if (printInput)
 			{
 				inputCharStr[0] = CHAR_NULL;
-				dlshPrintFunc("\n");
+				dlshPrintFunc("\r\n");
 			}
 
 			/* Terminate command line string */
@@ -198,7 +198,7 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 		}
 		else if (CHAR_ESCAPE == inputCharStr[0])
 		{
-			dlshPrintFunc("\n");
+			dlshPrintFunc("\r\n");
 			dlshPrintFunc(DEFAULT_PROMPT);
 			commandLineLen = 0;
 		}
@@ -237,7 +237,7 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 
 void dlshExit(void)
 {
-	char str[1] = { CHAR_NEWLINE };
+	char str[2] = { CHAR_NEWLINE2, CHAR_NEWLINE1 };
 
 	if (0 != dlshPrintFunc)
 	{
