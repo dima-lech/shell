@@ -8,6 +8,16 @@
 #endif
 
 
+#ifdef	DLSH_USE_STATIC_FUNC
+	#define dlshPrintFunc	DLSH_PRINT_FUNC
+	#define dlshGetCharFunc	DLSH_GETCHAR_FUNC
+#else
+	#undef	dlshPrintFunc
+	#undef	dlshGetCharFunc
+#endif
+
+
+
 #define BUILT_IN_COMMANDS_NUM	2
 #define MAX_STRING_LEN			1024
 #define MAX_COMMAND_STRING_LEN	32
@@ -31,9 +41,16 @@ typedef struct
 } DLSH_COMMAND_TYPE;
 
 
+#ifdef	DLSH_USE_STATIC_FUNC
+	void DLSH_PRINT_FUNC(const char * str);
+	char DLSH_GETCHAR_FUNC(void);
+#endif
 
-static dlshPrintFuncType dlshPrintFunc = 0;
-static dlshGetCharFuncType dlshGetCharFunc = 0;
+
+#ifndef DLSH_USE_STATIC_FUNC
+	static dlshPrintFuncType dlshPrintFunc = 0;
+	static dlshGetCharFuncType dlshGetCharFunc = 0;
+#endif
 static int exitFlag = 0;
 static int commandsNum = 0;
 static DLSH_COMMAND_TYPE commandsList[MAX_COMMANDS];
@@ -150,8 +167,10 @@ int dlshStart(dlshPrintFuncType printFuncParam, dlshGetCharFuncType getCharFuncP
 		return -1;
 	}
 
+#ifndef	DLSH_USE_STATIC_FUNC
 	dlshPrintFunc = printFuncParam;
 	dlshGetCharFunc = getCharFuncParam;
+#endif
 
 	/* Register built-in 'help' command */
 	dlshRegisterCommand("help", dlshHelpCommand);
@@ -239,10 +258,14 @@ void dlshExit(void)
 {
 	char str[2] = { CHAR_NEWLINE2, CHAR_NEWLINE1 };
 
+#ifndef	DLSH_USE_STATIC_FUNC
 	if (0 != dlshPrintFunc)
 	{
+#endif
 		dlshPrintFunc(str);
+#ifndef	DLSH_USE_STATIC_FUNC
 	}
+#endif
 
 	dlshExitCommand(0, 0);
 }
