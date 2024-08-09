@@ -13,43 +13,27 @@ enum
 };
 
 
-void memCommandUsagePrint(char * command)
-{
-	printf("Usage\n");
-	printf("\t%-16s%s d <address> <length> [-w <width>]\n",
-			"memory dump:", command);
-	printf("\t%-16s%s w <address> <value> [-w <width>]\n",
-			"memory write:", command);
-}
 
 
-unsigned long memArgParse(char * arg)
-{
-	int base = 10;
+void memCommand(int argc, char * argv[]);
+static void memRead(u_int64_t addressPrint, u_int64_t address,
+					u_int64_t length, u_int64_t width);
+static void memWrite(u_int64_t addressPrint, u_int64_t address,
+					u_int64_t value, u_int64_t width);
+static void memCommandUsagePrint(char * command);
+static u_int64_t memArgParse(char * arg);
 
-	if (!arg)
-	{
-		return 0;
-	}
 
-	if (('0' == arg[0]) && (('x' == arg[1]) || ('X' == arg[1])))
-	{
-		/* HEX value */
-		base = 16;
-	}
-
-	return (unsigned long)strtol(arg, NULL, base);
-}
 
 
 void memCommand(int argc, char * argv[])
 {
 	int c;
-	unsigned long length = 4;
-	unsigned long width = 4;
-	int opeartion = OP_UNKNOWN;
-	unsigned long value = 0;
-	unsigned long address = 0;
+	int operation = OP_UNKNOWN;
+	u_int64_t length = 4;
+	u_int64_t width = 4;
+	u_int64_t value = 0;
+	u_int64_t address = 0;
 
 	if (argc <= 1)
 	{
@@ -79,21 +63,22 @@ void memCommand(int argc, char * argv[])
 		}
 	}
 
-	/* Expecting exactly 3 non-optional arguments */
-	if ((argc - optind) != 3)
+
+	if ((argc - optind) < 1)
 	{
 		memCommandUsagePrint(argv[0]);
 		return;
 	}
 
+
 	/* Command argument */
 	if (strcmp(argv[optind], "d") == 0)
     {
-    	opeartion = OP_MEM_READ;
+    	operation = OP_MEM_READ;
     }
     else if (strcmp(argv[optind], "w") == 0)
     {
-    	opeartion = OP_MEM_WRITE;	
+    	operation = OP_MEM_WRITE;	
     }
     else
     {
@@ -102,19 +87,46 @@ void memCommand(int argc, char * argv[])
     }
     optind++;
 
+    if (OP_MEM_READ == operation)
+	{
+		/* Expecting at least 1 additional non-optional argument */
+		if ((argc - optind) < 1)
+		{
+			memCommandUsagePrint(argv[0]);
+			return;
+		}
+	}
+	else if (OP_MEM_WRITE == operation)
+	{
+		/* Expecting exactly 2 additional non-optional arguments */
+		if ((argc - optind) != 2)
+		{
+			memCommandUsagePrint(argv[0]);
+			return;
+		}
+	}
+	else
+	{
+		memCommandUsagePrint(argv[0]);
+		return;
+	}
+
     /* Address argument */
     address = memArgParse(argv[optind++]);
 
     /* Length/value argument */
-    if (OP_MEM_READ == opeartion)
+    if (OP_MEM_READ == operation)
     {
-    	length = memArgParse(argv[optind]);
-    	if (0 == length)
+    	if (optind < argc)
     	{
-    		length = 4;
-    	}
+	    	length = memArgParse(argv[optind]);
+	    	if (0 == length)
+	    	{
+	    		length = 4;
+	    	}
+	    }
     }
-    else if (OP_MEM_WRITE == opeartion)
+    else if (OP_MEM_WRITE == operation)
     {
     	value = memArgParse(argv[optind]);
     }
@@ -125,24 +137,133 @@ void memCommand(int argc, char * argv[])
     }
 
 
-	/* === DEBUG === */
-    switch (opeartion)
+    switch (operation)
     {
     	case OP_MEM_READ:
-    		printf ("READ\n");
-			printf("address = 0x%lx\n", address);
-			printf("length  = 0x%lx\n", length);
-			printf("width   = %lu\n", width);
+			memRead(0x0, address, length, width);
     		break;
 		case OP_MEM_WRITE:
-    		printf ("WRITE\n");
-    		printf("address = 0x%lx\n", address);
-			printf("value   = 0x%lx\n", value);
-			printf("width   = %lu\n", width);
+    		memWrite(0x0, address, value, width);
     		break;
 		default:
-    		printf ("UNKNOWN\n");
     		break;
     }
 }
+
+
+
+
+static void memCommandUsagePrint(char * command)
+{
+	printf("Usage\n");
+	printf("\t%-16s%s d <address> [<length>] [-w <width>]\n",
+			"memory dump:", command);
+	printf("\t%-16s%s w <address> <value> [-w <width>]\n",
+			"memory write:", command);
+}
+
+
+static u_int64_t memArgParse(char * arg)
+{
+	int base = 10;
+
+	if (!arg)
+	{
+		return 0;
+	}
+
+	if (('0' == arg[0]) && (('x' == arg[1]) || ('X' == arg[1])))
+	{
+		/* HEX value */
+		base = 16;
+	}
+
+	return (u_int64_t)strtol(arg, NULL, base);
+}
+
+
+
+
+static void memRead(u_int64_t addressPrint, u_int64_t address,
+					u_int64_t length, u_int64_t width)
+{
+	u_int32_t value = 0x0;
+	u_int32_t i;
+	u_int32_t j;
+	u_int32_t k;
+	char charBuffer[17];
+	u_int32_t charBufferIndex = 0;
+
+
+	/* Print memory dump */
+	for (i = 0; i < length; i++)
+	{
+		if ((0 == i) || ((address % 0x10) == 0))
+		{
+			if (i > 0)
+			{
+				charBuffer[charBufferIndex] = '\0';
+				charBufferIndex = 0;
+				printf("\t/%s/\n", charBuffer);
+			}
+			printf("%08lX :", addressPrint & 0xfffffffffffffff0lu);
+		}
+
+		/* Print first blanks */
+		if (0 == i)
+		{
+			for (j = 0; j < ((address % 0x10) / 0x4); j++)
+			{
+				printf("         ");
+
+				for (k = 0; k < 4; k++)
+				{
+					charBuffer[charBufferIndex++] = ' ';
+				}
+			}
+		}
+
+		value = *(volatile unsigned int*)address;
+		printf(" %08X", value);
+		for (k = 0; k < 4; k++)
+		{
+			j = value & 0xff;
+			value >>= 8;
+
+			if ((j >= 32) && (j <= 127))
+			{
+				charBuffer[charBufferIndex++] = (char)j;
+			}
+			else
+			{
+				charBuffer[charBufferIndex++] = '.';
+			}
+		}
+
+		address += 0x4;
+		addressPrint += 0x4;
+	}
+
+	/* Print last blanks */
+	for (i = address; (i % 0x10) != 0x0; i += 4)
+	{
+		printf("         ");
+
+		for (k = 0; k < 4; k++)
+		{
+			charBuffer[charBufferIndex++] = ' ';
+		}
+	}
+
+	charBuffer[charBufferIndex] = '\0';
+	printf("\t/%s/\n", charBuffer);
+}
+
+
+static void memWrite(u_int64_t addressPrint, u_int64_t address,
+					u_int64_t value, u_int64_t width)
+{
+
+}
+
 

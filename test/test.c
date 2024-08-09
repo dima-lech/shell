@@ -8,6 +8,11 @@
 
 
 
+char testBuff[0x1000] = { 0x12, 0x34, 0x56, 0x78, 0xde, 0xad, 0xbe, 0xef };
+
+
+
+
 void dlshTestPrint(const char* str);
 char dlshTestGetChar(void);
 void dlshTestExit(int s);
@@ -71,6 +76,7 @@ int main (void)
 {
     static struct termios oldt, newt;
     struct sigaction sigIntHandler;
+    int i;
 
 	printf("\nDLSH test start\n");
 	printf("ctrl+c to exit\n");
@@ -96,6 +102,17 @@ int main (void)
 	sigIntHandler.sa_flags = 0;
 
 	sigaction(SIGINT, &sigIntHandler, NULL);
+
+	/**
+	 * Test buffer setup
+	 **/
+	srand(0);
+	for (i = 16; i < sizeof(testBuff); i++)
+	{
+    	testBuff[i] = rand();
+	}
+	printf("\nTest buffer\n\taddress:\t0x%lx\n\tsize   :\t0x%lx\n",
+				(u_int64_t)testBuff, sizeof(testBuff));
 
 
 	/**
