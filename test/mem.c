@@ -292,6 +292,33 @@ static void memRead(u_int64_t addressPrint, u_int64_t address,
 static void memWrite(u_int64_t addressPrint, u_int64_t address,
 					u_int64_t value, u_int64_t width)
 {
+	u_int64_t widthMask;
+
+	widthMask = ~(width - 1);
+
+	address = address & widthMask;
+	addressPrint = addressPrint & widthMask;
+
+	printf("%08lX <= ", addressPrint);
+
+	switch (width)
+	{
+		case 1:
+			printf("%02X\n", (u_int8_t)value);
+			*(volatile u_int8_t*)address = (u_int8_t)value;
+			break;
+		case 2:
+			printf("%04X\n", (u_int16_t)value);
+			*(volatile u_int16_t*)address = (u_int16_t)value;
+			break;
+		case 4:
+			printf("%08X\n", (u_int32_t)value);
+			*(volatile u_int32_t*)address = (u_int32_t)value;
+			break;
+		default:
+			printf("unsupported width!\n");
+			return;
+	}
 
 }
 
