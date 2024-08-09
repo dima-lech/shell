@@ -73,21 +73,21 @@ void memCommand(int argc, char * argv[])
 
 	/* Command argument */
 	if (strcmp(argv[optind], "d") == 0)
-    {
-    	operation = OP_MEM_READ;
-    }
-    else if (strcmp(argv[optind], "w") == 0)
-    {
-    	operation = OP_MEM_WRITE;	
-    }
-    else
-    {
-    	memCommandUsagePrint(argv[0]);
-    	return;
-    }
-    optind++;
+	{
+		operation = OP_MEM_READ;
+	}
+	else if (strcmp(argv[optind], "w") == 0)
+	{
+		operation = OP_MEM_WRITE;
+	}
+	else
+	{
+		memCommandUsagePrint(argv[0]);
+		return;
+	}
+	optind++;
 
-    if (OP_MEM_READ == operation)
+	if (OP_MEM_READ == operation)
 	{
 		/* Expecting at least 1 additional non-optional argument */
 		if ((argc - optind) < 1)
@@ -111,43 +111,43 @@ void memCommand(int argc, char * argv[])
 		return;
 	}
 
-    /* Address argument */
-    address = memArgParse(argv[optind++]);
+	/* Address argument */
+	address = memArgParse(argv[optind++]);
 
-    /* Length/value argument */
-    if (OP_MEM_READ == operation)
-    {
-    	if (optind < argc)
-    	{
-	    	length = memArgParse(argv[optind]);
-	    	if (0 == length)
-	    	{
-	    		length = 4;
-	    	}
-	    }
-    }
-    else if (OP_MEM_WRITE == operation)
-    {
-    	value = memArgParse(argv[optind]);
-    }
+	/* Length/value argument */
+	if (OP_MEM_READ == operation)
+	{
+		if (optind < argc)
+		{
+			length = memArgParse(argv[optind]);
+			if (0 == length)
+			{
+				length = 4;
+			}
+		}
+	}
+	else if (OP_MEM_WRITE == operation)
+	{
+		value = memArgParse(argv[optind]);
+	}
 	else
-    {
-    	memCommandUsagePrint(argv[0]);
-    	return;
-    }
+	{
+		memCommandUsagePrint(argv[0]);
+		return;
+	}
 
 
-    switch (operation)
-    {
-    	case OP_MEM_READ:
+	switch (operation)
+	{
+		case OP_MEM_READ:
 			memRead(address, address, length, width);
-    		break;
+			break;
 		case OP_MEM_WRITE:
-    		memWrite(address, address, value, width);
-    		break;
+			memWrite(address, address, value, width);
+			break;
 		default:
-    		break;
-    }
+			break;
+	}
 }
 
 
