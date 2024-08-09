@@ -140,10 +140,10 @@ void memCommand(int argc, char * argv[])
     switch (operation)
     {
     	case OP_MEM_READ:
-			memRead(0x0, address, length, width);
+			memRead(address, address, length, width);
     		break;
 		case OP_MEM_WRITE:
-    		memWrite(0x0, address, value, width);
+    		memWrite(address, address, value, width);
     		break;
 		default:
     		break;
@@ -193,6 +193,8 @@ static void memRead(u_int64_t addressPrint, u_int64_t address,
 	u_int32_t k;
 	char charBuffer[17];
 	u_int32_t charBufferIndex = 0;
+	u_int64_t widthMask;
+	u_int64_t widthMaskPrint;
 
 	if ((width != 1) && (width != 2) && (width != 4))
 	{
@@ -200,11 +202,16 @@ static void memRead(u_int64_t addressPrint, u_int64_t address,
 		return;
 	}
 
+	widthMask = ~(width - 1);
+	widthMaskPrint = widthMask << 2;
+
+	address = address & widthMask;
+	addressPrint = addressPrint & widthMask;
 
 	/* Print memory dump */
 	for (i = 0; i < length; i += width)
 	{
-		if ((0 == i) || ((address % (width * 4)) == 0))
+		if ((0 == i) || ((addressPrint % (width * 4)) == 0))
 		{
 			if (i > 0)
 			{
@@ -212,19 +219,20 @@ static void memRead(u_int64_t addressPrint, u_int64_t address,
 				charBufferIndex = 0;
 				printf("\t/%s/\n", charBuffer);
 			}
-			printf("%08lX :", addressPrint & (~(width * 4)));
+			printf("%08lX :", addressPrint & widthMaskPrint);
 		}
 
 		/* Print first blanks */
 		if (0 == i)
 		{
-			for (j = 0; j < ((address % (width * 4)) / width); j++)
+			for (j = 0; j < ((addressPrint / width) % 4); j++)
 			{
 				for (k = 0; k < width; k++)
 				{
-					printf("  ");					
+					printf("  ");
 					charBuffer[charBufferIndex++] = ' ';
 				}
+				printf(" ");
 			}
 		}
 
@@ -266,13 +274,14 @@ static void memRead(u_int64_t addressPrint, u_int64_t address,
 	}
 
 	/* Print last blanks */
-	for (i = address; (i % (width * 4)) != 0x0; i += width)
+	for (j = 0; j < (4 - ((addressPrint / width) % 4)) % 4; j++)
 	{
-		for (k = 0; k < width; k++)
+		for (i = 0; i < width; i++)
 		{
 			printf("  ");
 			charBuffer[charBufferIndex++] = ' ';
 		}
+		printf(" ");
 	}
 
 	charBuffer[charBufferIndex] = '\0';
