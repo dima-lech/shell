@@ -19,7 +19,7 @@ void memCommand(int argc, char * argv[]);
 static void memRead(u_int64_t addressPrint, u_int64_t address,
 					u_int64_t length, u_int64_t width);
 static void memWrite(u_int64_t addressPrint, u_int64_t address,
-					u_int64_t value, u_int64_t width);
+					u_int64_t value, u_int64_t width, int interactiveFlag);
 static void memCommandUsagePrint(char * command);
 static u_int64_t memArgParse(char * arg);
 
@@ -34,6 +34,7 @@ void memCommand(int argc, char * argv[])
 	u_int64_t width = 4;
 	u_int64_t value = 0;
 	u_int64_t address = 0;
+	int interactiveFlag = 0;
 
 	if (argc <= 1)
 	{
@@ -41,9 +42,10 @@ void memCommand(int argc, char * argv[])
 		return;
 	}
 
-	optind = 1;
+	optind = 0;
+	optarg = 0;
 
-	while ((c = getopt (argc, argv, "w:")) != -1)
+	while ((c = getopt (argc, argv, "w:i")) != -1)
 	{
 		switch (c)
 		{
@@ -56,6 +58,9 @@ void memCommand(int argc, char * argv[])
 						width = 4;
 					}
 				}
+				break;
+			case 'i':
+				interactiveFlag = 1;
 				break;
 			default:
 				memCommandUsagePrint(argv[0]);
@@ -76,7 +81,7 @@ void memCommand(int argc, char * argv[])
 	{
 		operation = OP_MEM_READ;
 	}
-	else if (strcmp(argv[optind], "w") == 0)
+	else if (strcmp(argv[optind], "m") == 0)
 	{
 		operation = OP_MEM_WRITE;
 	}
@@ -96,10 +101,19 @@ void memCommand(int argc, char * argv[])
 			return;
 		}
 	}
-	else if (OP_MEM_WRITE == operation)
+	else if ((OP_MEM_WRITE == operation) && (!interactiveFlag))
 	{
 		/* Expecting exactly 2 additional non-optional arguments */
 		if ((argc - optind) != 2)
+		{
+			memCommandUsagePrint(argv[0]);
+			return;
+		}
+	}
+	else if ((OP_MEM_WRITE == operation) && (interactiveFlag))
+	{
+		/* Expecting exactly 1 additional non-optional arguments */
+		if ((argc - optind) != 1)
 		{
 			memCommandUsagePrint(argv[0]);
 			return;
@@ -128,7 +142,10 @@ void memCommand(int argc, char * argv[])
 	}
 	else if (OP_MEM_WRITE == operation)
 	{
-		value = memArgParse(argv[optind]);
+		if (!interactiveFlag)
+		{
+			value = memArgParse(argv[optind]);
+		}
 	}
 	else
 	{
@@ -143,7 +160,7 @@ void memCommand(int argc, char * argv[])
 			memRead(address, address, length, width);
 			break;
 		case OP_MEM_WRITE:
-			memWrite(address, address, value, width);
+			memWrite(address, address, value, width, interactiveFlag);
 			break;
 		default:
 			break;
@@ -158,8 +175,8 @@ static void memCommandUsagePrint(char * command)
 	printf("Usage\n");
 	printf("\t%-16s%s d <address> [<length>] [-w <width>]\n",
 			"memory dump:", command);
-	printf("\t%-16s%s w <address> <value> [-w <width>]\n",
-			"memory write:", command);
+	printf("\t%-16s%s m <address> [<value>] [-w <width>] [-i (interactive)]\n",
+			"memory modify:", command);
 }
 
 
@@ -290,34 +307,110 @@ static void memRead(u_int64_t addressPrint, u_int64_t address,
 
 
 static void memWrite(u_int64_t addressPrint, u_int64_t address,
-					u_int64_t value, u_int64_t width)
+					u_int64_t value, u_int64_t width, int interactiveFlag)
 {
 	u_int64_t widthMask;
+	int exitFlag = 0;
+	int skipFlag = 0;
+	char inputStr1[20] = { '.' };
+	char inputStr2[20] = { '\0' };
 
 	widthMask = ~(width - 1);
 
 	address = address & widthMask;
 	addressPrint = addressPrint & widthMask;
 
-	printf("%08lX <= ", addressPrint);
-
-	switch (width)
+	if (!interactiveFlag)
 	{
-		case 1:
-			printf("%02X\n", (u_int8_t)value);
-			*(volatile u_int8_t*)address = (u_int8_t)value;
-			break;
-		case 2:
-			printf("%04X\n", (u_int16_t)value);
-			*(volatile u_int16_t*)address = (u_int16_t)value;
-			break;
-		case 4:
-			printf("%08X\n", (u_int32_t)value);
-			*(volatile u_int32_t*)address = (u_int32_t)value;
-			break;
-		default:
-			printf("unsupported width!\n");
-			return;
+		printf("%08lX <= ", addressPrint);
+
+		switch (width)
+		{
+			case 1:
+				printf("%02X\n", (u_int8_t)value);
+				*(volatile u_int8_t*)address = (u_int8_t)value;
+				break;
+			case 2:
+				printf("%04X\n", (u_int16_t)value);
+				*(volatile u_int16_t*)address = (u_int16_t)value;
+				break;
+			case 4:
+				printf("%08X\n", (u_int32_t)value);
+				*(volatile u_int32_t*)address = (u_int32_t)value;
+				break;
+			default:
+				printf("unsupported width!\n");
+				return;
+		}
+	}
+	else
+	{
+		printf("(enter '.' or 'q' to exit)\n");
+
+		while (!exitFlag)
+		{
+			skipFlag = 0;
+
+			printf("%08lX : ", addressPrint);
+			switch (width)
+			{
+				case 1:
+					value = *(volatile u_int8_t*)address;
+					printf("%02X", (u_int8_t)value);
+					break;
+				case 2:
+					value = *(volatile u_int16_t*)address;
+					printf("%04X", (u_int16_t)value);
+					break;
+				case 4:
+					value = *(volatile u_int32_t*)address;
+					printf("%08X", (u_int32_t)value);
+					break;
+				default:
+					printf("unsupported width!\n");
+					return;
+			}
+			printf(" > ");
+
+			if (fgets(inputStr1, sizeof(inputStr1), stdin) == 0)
+			{
+				skipFlag = 1;
+			}
+			else
+			{
+				if (sscanf(inputStr1, "%s", inputStr2) <= 0)
+				{
+					skipFlag = 1;
+				}
+			}
+
+			if (('.' == inputStr2[0]) || ('q' == inputStr2[0])
+					|| ('Q' == inputStr2[0]))
+			{
+				exitFlag = 1;
+			}
+			else if (!skipFlag)
+			{
+				value = memArgParse(inputStr2);
+				switch (width)
+				{
+					case 1:
+						*(volatile u_int8_t*)address = (u_int8_t)value;
+						break;
+					case 2:
+						*(volatile u_int16_t*)address = (u_int16_t)value;
+						break;
+					case 4:
+						*(volatile u_int32_t*)address = (u_int32_t)value;
+						break;
+					default:
+						printf("unsupported width!\n");
+						return;
+				}
+			}
+			address += width;
+			addressPrint += width;
+		}
 	}
 
 }
