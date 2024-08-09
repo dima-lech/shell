@@ -13,6 +13,7 @@ char dlshTestGetChar(void);
 void dlshTestExit(int s);
 void testCommand1(int argc, char * argv[]);
 void testCommand2(int argc, char * argv[]);
+extern void memCommand(int argc, char * argv[]);
 
 
 
@@ -100,7 +101,8 @@ int main (void)
 	/**
 	 * Register commands
 	 **/
-	dlshRegisterCommand("test1", testCommand1);
+	dlshRegisterCommand("mem", memCommand);
+	dlshRegisterCommand("test2", testCommand2);
 	dlshRegisterCommand("test2", testCommand2);
 
 
