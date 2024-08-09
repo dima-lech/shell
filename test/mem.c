@@ -194,11 +194,17 @@ static void memRead(u_int64_t addressPrint, u_int64_t address,
 	char charBuffer[17];
 	u_int32_t charBufferIndex = 0;
 
+	if ((width != 1) && (width != 2) && (width != 4))
+	{
+		printf("unsupported width!\n");
+		return;
+	}
+
 
 	/* Print memory dump */
-	for (i = 0; i < length; i++)
+	for (i = 0; i < length; i += width)
 	{
-		if ((0 == i) || ((address % 0x10) == 0))
+		if ((0 == i) || ((address % (width * 4)) == 0))
 		{
 			if (i > 0)
 			{
@@ -206,26 +212,41 @@ static void memRead(u_int64_t addressPrint, u_int64_t address,
 				charBufferIndex = 0;
 				printf("\t/%s/\n", charBuffer);
 			}
-			printf("%08lX :", addressPrint & 0xfffffffffffffff0lu);
+			printf("%08lX :", addressPrint & (~(width * 4)));
 		}
 
 		/* Print first blanks */
 		if (0 == i)
 		{
-			for (j = 0; j < ((address % 0x10) / 0x4); j++)
+			for (j = 0; j < ((address % (width * 4)) / width); j++)
 			{
-				printf("         ");
-
-				for (k = 0; k < 4; k++)
+				for (k = 0; k < width; k++)
 				{
+					printf("  ");					
 					charBuffer[charBufferIndex++] = ' ';
 				}
 			}
 		}
 
-		value = *(volatile unsigned int*)address;
-		printf(" %08X", value);
-		for (k = 0; k < 4; k++)
+		switch (width)
+		{
+			case 1:
+				value = *(volatile u_int8_t*)address;
+				printf(" %02X", value);
+				break;
+			case 2:
+				value = *(volatile u_int16_t*)address;
+				printf(" %04X", value);
+				break;
+			case 4:
+				value = *(volatile u_int32_t*)address;
+				printf(" %08X", value);
+				break;
+			default:
+				printf("unsupported width!\n");
+				return;
+		}
+		for (k = 0; k < width; k++)
 		{
 			j = value & 0xff;
 			value >>= 8;
@@ -240,17 +261,16 @@ static void memRead(u_int64_t addressPrint, u_int64_t address,
 			}
 		}
 
-		address += 0x4;
-		addressPrint += 0x4;
+		address += width;
+		addressPrint += width;
 	}
 
 	/* Print last blanks */
-	for (i = address; (i % 0x10) != 0x0; i += 4)
+	for (i = address; (i % (width * 4)) != 0x0; i += width)
 	{
-		printf("         ");
-
-		for (k = 0; k < 4; k++)
+		for (k = 0; k < width; k++)
 		{
+			printf("  ");
 			charBuffer[charBufferIndex++] = ' ';
 		}
 	}
