@@ -178,7 +178,7 @@ static u_int64_t memArgParse(char * arg)
 		base = 16;
 	}
 
-	return (u_int64_t)strtol(arg, NULL, base);
+	return (u_int64_t)strtoul(arg, NULL, base);
 }
 
 
