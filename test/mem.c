@@ -34,7 +34,7 @@ void memCommand(int argc, char * argv[])
 	u_int64_t width = 4;
 	u_int64_t value = 0;
 	u_int64_t address = 0;
-	int interactiveFlag = 0;
+	int interactiveFlag = 1;
 
 	if (argc <= 1)
 	{
@@ -92,34 +92,9 @@ void memCommand(int argc, char * argv[])
 	}
 	optind++;
 
-	if (OP_MEM_READ == operation)
-	{
-		/* Expecting at least 1 additional non-optional argument */
-		if ((argc - optind) < 1)
-		{
-			memCommandUsagePrint(argv[0]);
-			return;
-		}
-	}
-	else if ((OP_MEM_WRITE == operation) && (!interactiveFlag))
-	{
-		/* Expecting exactly 2 additional non-optional arguments */
-		if ((argc - optind) != 2)
-		{
-			memCommandUsagePrint(argv[0]);
-			return;
-		}
-	}
-	else if ((OP_MEM_WRITE == operation) && (interactiveFlag))
-	{
-		/* Expecting exactly 1 additional non-optional arguments */
-		if ((argc - optind) != 1)
-		{
-			memCommandUsagePrint(argv[0]);
-			return;
-		}
-	}
-	else
+
+	/* Expecting at least 1 additional non-optional argument */
+	if ((argc - optind) < 1)
 	{
 		memCommandUsagePrint(argv[0]);
 		return;
@@ -142,9 +117,10 @@ void memCommand(int argc, char * argv[])
 	}
 	else if (OP_MEM_WRITE == operation)
 	{
-		if (!interactiveFlag)
+		if (optind < argc)
 		{
 			value = memArgParse(argv[optind]);
+			interactiveFlag = 0;
 		}
 	}
 	else
@@ -175,7 +151,7 @@ static void memCommandUsagePrint(char * command)
 	printf("Usage\n");
 	printf("\t%-16s%s d <address> [<length>] [-w <width>]\n",
 			"memory dump:", command);
-	printf("\t%-16s%s m <address> [<value>] [-w <width>] [-i (interactive)]\n",
+	printf("\t%-16s%s m <address> [<value>] [-w <width>]\n",
 			"memory modify:", command);
 }
 
