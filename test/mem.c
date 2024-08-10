@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdint.h>
 
 
 enum
@@ -22,6 +23,9 @@ static void memWrite(int64_t addressPrint, int64_t address,
 					int64_t value, int64_t width, int interactiveFlag);
 static void memCommandUsagePrint(char * command);
 static int64_t memArgParse(char * arg);
+static uint64_t memReadVal(uint64_t address, int64_t width);
+static void memWriteVal(uint64_t address, int64_t width, uint64_t value);
+static void memPrintVal(int64_t width, uint64_t value);
 
 
 
@@ -66,6 +70,12 @@ void memCommand(int argc, char * argv[])
 				memCommandUsagePrint(argv[0]);
 				return;
 		}
+	}
+
+	if ((width != 1) && (width != 2) && (width != 4))
+	{
+		printf("unsupported width!\n");
+		return;
 	}
 
 
@@ -189,12 +199,6 @@ static void memRead(int64_t addressPrint, int64_t address,
 	int64_t widthMask;
 	int64_t widthMaskPrint;
 
-	if ((width != 1) && (width != 2) && (width != 4))
-	{
-		printf("unsupported width!\n");
-		return;
-	}
-
 	widthMask = ~(width - 1);
 	widthMaskPrint = widthMask << 2;
 
@@ -229,24 +233,10 @@ static void memRead(int64_t addressPrint, int64_t address,
 			}
 		}
 
-		switch (width)
-		{
-			case 1:
-				value = *(volatile int8_t*)address;
-				printf(" %02X", value);
-				break;
-			case 2:
-				value = *(volatile int16_t*)address;
-				printf(" %04X", value);
-				break;
-			case 4:
-				value = *(volatile int32_t*)address;
-				printf(" %08X", value);
-				break;
-			default:
-				printf("unsupported width!\n");
-				return;
-		}
+		value = memReadVal(address, width);
+		printf(" ");
+		memPrintVal(width, value);
+
 		for (k = 0; k < width; k++)
 		{
 			j = value & 0xff;
@@ -300,24 +290,10 @@ static void memWrite(int64_t addressPrint, int64_t address,
 	{
 		printf("%08lX <= ", addressPrint);
 
-		switch (width)
-		{
-			case 1:
-				printf("%02X\n", (int8_t)value);
-				*(volatile int8_t*)address = (int8_t)value;
-				break;
-			case 2:
-				printf("%04X\n", (int16_t)value);
-				*(volatile int16_t*)address = (int16_t)value;
-				break;
-			case 4:
-				printf("%08X\n", (int32_t)value);
-				*(volatile int32_t*)address = (int32_t)value;
-				break;
-			default:
-				printf("unsupported width!\n");
-				return;
-		}
+		memPrintVal(width, value);
+		printf("\n");
+		memWriteVal(address, width, value);
+
 	}
 	else
 	{
@@ -328,24 +304,9 @@ static void memWrite(int64_t addressPrint, int64_t address,
 			skipFlag = 0;
 
 			printf("%08lX : ", addressPrint);
-			switch (width)
-			{
-				case 1:
-					value = *(volatile int8_t*)address;
-					printf("%02X", (int8_t)value);
-					break;
-				case 2:
-					value = *(volatile int16_t*)address;
-					printf("%04X", (int16_t)value);
-					break;
-				case 4:
-					value = *(volatile int32_t*)address;
-					printf("%08X", (int32_t)value);
-					break;
-				default:
-					printf("unsupported width!\n");
-					return;
-			}
+
+			value = memReadVal(address, width);
+			memPrintVal(width, value);
 			printf(" > ");
 
 			if (fgets(inputStr1, sizeof(inputStr1), stdin) == 0)
@@ -368,21 +329,8 @@ static void memWrite(int64_t addressPrint, int64_t address,
 			else if (!skipFlag)
 			{
 				value = memArgParse(inputStr2);
-				switch (width)
-				{
-					case 1:
-						*(volatile int8_t*)address = (int8_t)value;
-						break;
-					case 2:
-						*(volatile int16_t*)address = (int16_t)value;
-						break;
-					case 4:
-						*(volatile int32_t*)address = (int32_t)value;
-						break;
-					default:
-						printf("unsupported width!\n");
-						return;
-				}
+				
+				memWriteVal(address, width, value);
 			}
 			address += width;
 			addressPrint += width;
@@ -390,5 +338,67 @@ static void memWrite(int64_t addressPrint, int64_t address,
 	}
 
 }
+
+
+static uint64_t memReadVal(uint64_t address, int64_t width)
+{
+	uint64_t value;
+
+	switch (width)
+	{
+		case 1:
+			value = *(volatile uint8_t*)address;
+			break;
+		case 2:
+			value = *(volatile uint16_t*)address;
+			break;
+		case 4:
+			value = *(volatile uint32_t*)address;
+			break;
+		default:
+			return 0;
+	}
+
+	return value;
+}
+
+
+static void memWriteVal(uint64_t address, int64_t width, uint64_t value)
+{
+	switch (width)
+	{
+		case 1:
+			*(volatile uint8_t*)address = (uint8_t)value;
+			break;
+		case 2:
+			*(volatile uint16_t*)address = (uint16_t)value;
+			break;
+		case 4:
+			*(volatile uint32_t*)address = (uint32_t)value;
+			break;
+		default:
+			return;
+	}
+}
+
+
+static void memPrintVal(int64_t width, uint64_t value)
+{
+	switch (width)
+	{
+		case 1:
+			printf("%02X", (uint8_t)value);
+			break;
+		case 2:
+			printf("%04X", (uint16_t)value);
+			break;
+		case 4:
+			printf("%08X", (uint32_t)value);
+			break;
+		default:
+			return;
+	}
+}
+
 
 
