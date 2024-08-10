@@ -35,7 +35,8 @@ void memCommand(int argc, char * argv[])
 	int c;
 	int operation = OP_UNKNOWN;
 	int64_t length = 4;
-	int64_t width = 4;
+	static int64_t width = 4;
+	int64_t widthInput;
 	int64_t value = 0;
 	int64_t address = 0;
 	int interactiveFlag = 1;
@@ -48,6 +49,7 @@ void memCommand(int argc, char * argv[])
 
 	optind = 0;
 	optarg = 0;
+	widthInput = width;
 
 	while ((c = getopt (argc, argv, "w:i")) != -1)
 	{
@@ -56,11 +58,7 @@ void memCommand(int argc, char * argv[])
 			case 'w':
 				if (optarg)
 				{
-					width = memArgParse(optarg);
-					if (width <= 0)
-					{
-						width = 4;
-					}
+					widthInput = memArgParse(optarg);
 				}
 				break;
 			case 'i':
@@ -72,11 +70,12 @@ void memCommand(int argc, char * argv[])
 		}
 	}
 
-	if ((width != 1) && (width != 2) && (width != 4))
+	if ((widthInput != 1) && (widthInput != 2) && (widthInput != 4))
 	{
 		printf("unsupported width!\n");
 		return;
 	}
+	width = widthInput;
 
 
 	if ((argc - optind) < 1)
