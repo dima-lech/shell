@@ -119,7 +119,7 @@ int main (void)
 	 * Register commands
 	 **/
 	dlshRegisterCommand("mem", memCommand);
-	dlshRegisterCommand("test2", testCommand2);
+	dlshRegisterCommand("test1", testCommand1);
 	dlshRegisterCommand("test2", testCommand2);
 
 
